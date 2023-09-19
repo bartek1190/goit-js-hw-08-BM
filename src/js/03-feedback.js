@@ -27,13 +27,25 @@ function clearFormState() {
   messageTextarea.value = '';
 }
 
-emailInput.addEventListener('input', saveFormState);
-messageTextarea.addEventListener('input', saveFormState);
+function validateForm() {
+  const emailValue = emailInput.value.trim(); // Remove leading and trailing spaces
+  const messageValue = messageTextarea.value.trim();
+
+  if (emailValue === '' || messageValue === '') {
+    alert('Proszę wypełnić wszystkie pola formularza.');
+    return false; // Prevent form submission
+  }
+
+  return true; // Allow form submission
+}
 
 form.addEventListener('submit', function (e) {
   e.preventDefault();
-  clearFormState();
-  console.log('Formularz został wysłany. Dane wyczyszczone.');
+
+  if (validateForm()) {
+    clearFormState();
+    console.log('Formularz został wysłany. Dane wyczyszczone.');
+  }
 });
 
 loadFormState();
