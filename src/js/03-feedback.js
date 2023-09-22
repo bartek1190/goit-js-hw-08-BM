@@ -1,66 +1,45 @@
 import throttle from 'lodash.throttle';
 
-const form = document.querySelector('.feedback-form');
-const emailInput = form.querySelector('input[name="email"]');
-const messageTextarea = form.querySelector('textarea[name="message"]');
+const feedbackForm = document.querySelector('.feedback-form');
 const LOCALSTORAGE_KEY = 'feedback-form-state';
 
-// Deklaruj obiekt z właściwościami "email" i "message"
 let formData = {
   email: '',
   message: '',
 };
 
-function saveFormState() {
-  formData.email = emailInput.value;
-  formData.message = messageTextarea.value;
-
-  localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(formData));
+const checkStorage = localStorage.getItem(LOCALSTORAGE_KEY);
+if (checkStorage) {
+  formData = JSON.parse(checkStorage);
+  feedbackForm.elements.email.value = formData.email;
+  feedbackForm.elements.message.value = formData.message;
 }
 
-function loadFormState() {
-  const savedData = JSON.parse(localStorage.getItem(LOCALSTORAGE_KEY));
-  if (savedData) {
-    formData = savedData;
-    emailInput.value = formData.email;
-    messageTextarea.value = formData.message;
-  }
-}
+const throttledSave = throttle(data => {
+  localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(data));
+}, 500);
 
-function clearFormState() {
+function saveFormData(evt) {
+  formData[evt.target.name] = evt.target.value;
+  throttledSave(formData);
+}
+feedbackForm.addEventListener('input', saveFormData);
+
+const submitForm = eventSent => {
+  eventSent.preventDefault();
+  const {
+    elements: { email, message },
+  } = eventSent.currentTarget;
+  const formObjectData = {
+    email: email.value,
+    message: message.value,
+  };
+  console.log(formObjectData);
   localStorage.removeItem(LOCALSTORAGE_KEY);
   formData = {
     email: '',
     message: '',
   };
-  emailInput.value = '';
-  messageTextarea.value = '';
-}
-
-function validateForm() {
-  const emailValue = formData.email.trim();
-  const messageValue = formData.message.trim();
-
-  if (emailValue === '' || messageValue === '') {
-    alert('Proszę wypełnić wszystkie pola formularza.');
-    return false;
-  }
-
-  return true;
-}
-
-form.addEventListener('submit', function (e) {
-  e.preventDefault();
-
-  if (validateForm()) {
-    clearFormState();
-    console.log('Formularz został wysłany. Dane wyczyszczone.');
-  }
-});
-
-loadFormState();
-
-const throttledSaveFormState = throttle(saveFormState, 500);
-
-emailInput.addEventListener('input', throttledSaveFormState);
-messageTextarea.addEventListener('input', throttledSaveFormState);
+  feedbackForm.reset();
+};
+feedbackForm.addEventListener('submit', submitForm);
