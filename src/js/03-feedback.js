@@ -3,21 +3,21 @@ import throttle from 'lodash.throttle';
 const feedbackForm = document.querySelector('.feedback-form');
 const LOCALSTORAGE_KEY = 'feedback-form-state';
 
-let formData = {
-  email: '',
-  message: '',
-};
-
-const checkStorage = localStorage.getItem(LOCALSTORAGE_KEY);
-if (checkStorage) {
-  formData = JSON.parse(checkStorage);
-  feedbackForm.elements.email.value = formData.email;
-  feedbackForm.elements.message.value = formData.message;
+function saveFormState() {
+  const formData = {
+    email: emailInput.value,
+    message: messageTextarea.value,
+  };
+  localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(formData));
 }
 
-const throttledSave = throttle(data => {
-  localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(data));
-}, 500);
+function loadFormState() {
+  const formData = JSON.parse(localStorage.getItem(LOCALSTORAGE_KEY));
+  if (formData) {
+    emailInput.value = formData.email;
+    messageTextarea.value = formData.message;
+  }
+}
 
 function saveFormData(evt) {
   formData[evt.target.name] = evt.target.value;
@@ -36,10 +36,34 @@ const submitForm = eventSent => {
   };
   console.log(formObjectData);
   localStorage.removeItem(LOCALSTORAGE_KEY);
-  formData = {
-    email: '',
-    message: '',
-  };
-  feedbackForm.reset();
+  emailInput.value = '';
+  messageTextarea.value = '';
 };
-feedbackForm.addEventListener('submit', submitForm);
+
+function validateForm() {
+  const emailValue = emailInput.value.trim(); // Remove leading and trailing spaces
+  const messageValue = messageTextarea.value.trim();
+
+  if (emailValue === '' || messageValue === '') {
+    alert('Proszę wypełnić wszystkie pola formularza.');
+    return false; // Prevent form submission
+  }
+
+  return true; // Allow form submission
+}
+
+form.addEventListener('submit', function (e) {
+  e.preventDefault();
+
+  if (validateForm()) {
+    clearFormState();
+    console.log('Formularz został wysłany. Dane wyczyszczone.');
+  }
+});
+
+loadFormState();
+
+const throttledSaveFormState = throttle(saveFormState, 500);
+
+emailInput.addEventListener('input', throttledSaveFormState);
+messageTextarea.addEventListener('input', throttledSaveFormState);
