@@ -1,9 +1,11 @@
 import throttle from 'lodash.throttle';
 
 const feedbackForm = document.querySelector('.feedback-form');
+const emailInput = feedbackForm.elements[0];
+const messageTextarea = feedbackForm.elements[1];
 const LOCALSTORAGE_KEY = 'feedback-form-state';
 
-function saveFormState() {
+function changeForm() {
   const formData = {
     email: emailInput.value,
     message: messageTextarea.value,
@@ -19,25 +21,21 @@ function loadFormState() {
   }
 }
 
-function saveFormData(evt) {
-  formData[evt.target.name] = evt.target.value;
-  throttledSave(formData);
-}
-feedbackForm.addEventListener('input', saveFormData);
-
-const submitForm = eventSent => {
-  eventSent.preventDefault();
-  const {
-    elements: { email, message },
-  } = eventSent.currentTarget;
-  const formObjectData = {
-    email: email.value,
-    message: message.value,
-  };
-  console.log(formObjectData);
-  localStorage.removeItem(LOCALSTORAGE_KEY);
-  emailInput.value = '';
-  messageTextarea.value = '';
+const submitForm = event => {
+  event.preventDefault();
+  if (validateForm()) {
+    const {
+      elements: { email, message },
+    } = event.currentTarget;
+    const formObjectData = {
+      email: email.value,
+      message: message.value,
+    };
+    console.log(formObjectData);
+    localStorage.removeItem(LOCALSTORAGE_KEY);
+    emailInput.value = '';
+    messageTextarea.value = '';
+  }
 };
 
 function validateForm() {
@@ -52,18 +50,10 @@ function validateForm() {
   return true; // Allow form submission
 }
 
-form.addEventListener('submit', function (e) {
-  e.preventDefault();
-
-  if (validateForm()) {
-    clearFormState();
-    console.log('Formularz został wysłany. Dane wyczyszczone.');
-  }
-});
-
 loadFormState();
 
-const throttledSaveFormState = throttle(saveFormState, 500);
+const throttledSaveFormState = throttle(changeForm, 500);
 
 emailInput.addEventListener('input', throttledSaveFormState);
 messageTextarea.addEventListener('input', throttledSaveFormState);
+feedbackForm.addEventListener('submit', submitForm);
